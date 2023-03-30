@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  app:
+    build: ./docker/app
+    working_dir: /var/www/src
+    volumes:
+      - type: bind
+        source: ./src
+        target: /var/www/src
+
+  nginx:
+    build: ./docker/nginx
+    ports:
+      - target: 80
+        published: ${WEB_PUBLISHED_PORT:-8080}
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: bind
+        source: ./src/public
+        target: /var/www/src/public
+
+  mysql:
+    build: ./docker/mysql
+    ports:
+      - target: 3306
+        published: ${DB_PUBLISHED_PORT:-3306}
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: volume
+        source: db-store
+        target: /var/lib/mysql
+        volume:
+          nocopy: true
+    environment: 
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpw}
+      MYSQL_DATABASE: ${DB_DATABASE:-local_db}
+      MYSQL_USER: ${DB_USERNAME:-dbuser}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-dbuserpw}
+
+volumes:
+  db-store:
